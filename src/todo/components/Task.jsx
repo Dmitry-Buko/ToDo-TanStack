@@ -20,21 +20,19 @@ const Task = ({ task }) => {
 
   const validateAndSave = useCallback(
     async (text) => {
-      const success = await editTitle(task.id, text, setError);
-      if (success) {
-        setError("");
-        setIsEdit(false);
-        setEditText(text);
-        return true;
-      }
-      return false;
+      editTitle(task.id, text, (errorMessage) => {
+        setError(errorMessage);
+      });
+
+      setIsEdit(false);
+      setEditText(text);
     },
     [editTitle, task.id],
   );
 
   const handleKeyDown = async (e) => {
     if (e.key === "Enter") {
-      await validateAndSave(editText);
+      validateAndSave(editText);
     } else if (e.key === "Escape") {
       setIsEdit(false);
       setEditText(task.title);
@@ -44,7 +42,7 @@ const Task = ({ task }) => {
 
   const toggleEdit = async () => {
     if (isEdit) {
-      await validateAndSave(editText);
+      validateAndSave(editText);
     } else {
       setIsEdit(true);
       setError("");
@@ -59,7 +57,7 @@ const Task = ({ task }) => {
         checked={!!task.isCompleted}
         onChange={() => isDoneToggler(task.id)}
       />
-
+      {error && <ErrorBox error={error} />}
       <div className="task__content">
         {isEdit ? (
           <div className="edit-wrapper">
@@ -70,7 +68,6 @@ const Task = ({ task }) => {
               setError={setError}
               handleKeyDown={handleKeyDown}
             />
-            {error && <ErrorBox error={error} />}
           </div>
         ) : (
           <TaskText task={task} />
@@ -90,7 +87,7 @@ const Task = ({ task }) => {
               : "Изменить ✍️"}
         </button>
         <button
-          onClick={() => deleteTask(task.id)}
+          onClick={() => deleteTask(task.id, (err) => setError(err))}
           disabled={loading}
           className="task__btn--delete"
         >

@@ -1,11 +1,15 @@
+import { useState } from "react";
+import ErrorBox from "../../shared/ui/ErrorBox";
 import { useTodo } from "../context/ToDoContext";
 
 const FilteredTasks = () => {
+  const [error, setError] = useState("");
   const { filter, setFilter, activeCount, clearCompeted } = useTodo();
 
   return (
     <div className="todo__footer">
       <div className="filters">
+        {error && <ErrorBox error={error} />}
         <button
           className={`filters__btn ${filter === "all" ? "filters__btn--active" : ""}`}
           onClick={() => setFilter("all")}
@@ -29,7 +33,7 @@ const FilteredTasks = () => {
         <p className="todo__counter">Осталось дел: {activeCount}</p>
         <button
           className="todo__clear-completed"
-          onClick={() => clearCompeted()}
+          onClick={() => clearCompeted((err) => setError(err))}
         >
           Очистить выполненные
         </button>

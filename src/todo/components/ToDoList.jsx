@@ -2,9 +2,10 @@ import { useTodo } from "../context/ToDoContext";
 import Task from "./Task";
 
 const ToDoList = () => {
-  const { filteredTasks, loading } = useTodo();
-
-  if (loading) return <h1 className="nothing">Загрузка...</h1>
+  const { filteredTasks, error, isLoading, isError } = useTodo();
+  
+  if (isLoading) return <h1 className="nothing">Загрузка...</h1>;
+  if (isError) return <h1 className="nothing">{error}</h1>;
   if (filteredTasks.length === 0) return <h1 className="nothing">Пусто 🤷🏼‍♂️</h1>;
 
   return (

@@ -10,12 +10,15 @@ const InputTask = () => {
   const handleSubmit = useCallback(
     async (e) => {
       e.preventDefault();
-      const success = await addTask(text, setError);
-      if (success) {
-        setText("");
-        setError("");
+      if (!text.trim()) {
+        setError("Задача не может быть пустой!");
+        return;
       }
+      addTask(text, (errorMessage) => {
+        setError(errorMessage);
+      });
       setText("");
+      setError("");
     },
     [addTask, text],
   );
@@ -33,7 +36,7 @@ const InputTask = () => {
           className={`todo__input-task ${error ? "error" : ""}`}
           placeholder="Новая задача..."
         />
-        <button className="add-task-form__submit" type="submit">
+        <button className="add-task-form__submit" type="submit" disabled={loadingAddTask}>
           {loadingAddTask ? "Добавление..." : "Добавить ➕"}
         </button>
       </form>

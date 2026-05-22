@@ -1,40 +1,27 @@
 import { useState, useCallback, useMemo, useEffect } from "react";
 import { ToDoContext } from "./ToDoContext";
-import api from "../api/todoApi";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  todoKeys,
+  fetchTask,
+  createTask,
+  editTodoTask,
+  deleteTodoTask,
+  toggleTodoTask,
+} from "../api/todoApiFunc";
 
 export const ToDoProvider = ({ children }) => {
   const [tasks, setTasks] = useState([]);
   const [filter, setFilter] = useState("all");
   const [loading, setLoading] = useState(false); //флаг загрузки
-  const [loadingAddTask, setLoadingAddTask] = useState(false); //флаг загрузки новая таска
-  const [loadingChangeTask, setLoadingChangeTask] = useState(false); //флаг загрузки изменение таски
-  const [loadingDeleteTask, setLoadingDeleteTask] = useState(false); //флаг загрузки изменение таски
-  const [success, setSuccess] = useState(""); //успех загрузки
-  const [error, setError] = useState(""); //ошибка при загрузке
+  // const [loadingAddTask, setLoadingAddTask] = useState(false); //флаг загрузки новая таска
+  // const [loadingChangeTask, setLoadingChangeTask] = useState(false);
+  // const [loadingDeleteTask, setLoadingDeleteTask] = useState(false);
+  const queryClient = useQueryClient(); //--------------------квери
+  // const [success, setSuccess] = useState(""); //успех загрузки
+  // const [error, setError] = useState(""); //ошибка при загрузке
+  console.log(tasks);
 
-  //API начальная Загрузка тасок
-  useEffect(() => {
-    const loadTasks = async () => {
-      setLoading(true);
-
-      try {
-        const response = await api.get("/todos");
-        setTasks(response.data);
-        if (response.status === 200) setSuccess("Загрузка удалась!");
-      } catch (error) {
-        setError(
-          "Ошибка:",
-          error.response?.data ||
-            error.message ||
-            "Не удалось загрузить твои задачи!",
-        );
-      } finally {
-        setLoading(false);
-      }
-    };
-    const token = localStorage.getItem("token");
-    if (token) loadTasks();
-  }, []);
   //кол-во активных
   const activeCount = useMemo(() => {
     let count = 0;
@@ -55,125 +42,121 @@ export const ToDoProvider = ({ children }) => {
     }
   }, [filter, tasks]);
 
-  //валидация
-  const validateText = useCallback((text) => {
-    const trimmed = text.trim();
-    if (!trimmed) {
-      return { isValid: false, error: "Задача не может быть пустой!" };
-    }
-    return { isValid: true, trimmedText: trimmed.toString() };
-  }, []); 
+  //---API начальная Загрузка тасок
+  const {
+    data: receivedTasks = [],
+    isLoading,
+    isError,
+    error,
+  } = useQuery({
+    queryKey: todoKeys.list(),
+    queryFn: fetchTask,
+  });
+  useEffect(() => {
+    setTasks(receivedTasks);
+  }, [receivedTasks]);
 
-  //API добавление задачи 
+  //---API добавление задачи
+  const addMutation = useMutation({
+    mutationFn: createTask,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: todoKeys.list() });
+    },
+  });
   const addTask = useCallback(
-    async (title, onError) => {
-      setLoadingAddTask(true);
-      const result = validateText(title);
-      if (!result.isValid) {
-        onError?.(result.error);
-        setLoadingAddTask(false);
-        return false;
-      }
-      try {
-        const response = await api.post("/todos", {
-          title: result.trimmedText,
-        });
-        setTasks((prev) => [...prev, response.data]);
-      } catch (error) {
-        const errorMessage =
-          error.response?.data?.errors?.[0]?.msg || "Произошла ошибка";
-        setError(errorMessage);
-      } finally {
-        setLoadingAddTask(false);
-      }
-    },
-    [validateText],
-  );
-
-  //изменение задачи
-  const editTitle = useCallback(
-    async (id, newTitle, onError) => {
-      setLoadingChangeTask(true);
-      const result = validateText(newTitle);
-      if (!result.isValid) {
-        onError?.(result.error);
-        setLoadingChangeTask(false);
-        return false;
-      }
-      try {
-        const response = await api.patch(`/todos/${id}`, {
-          title: newTitle,
-        });
-        setTasks((prev) =>
-          prev.map((task) =>
-            task.id === id ? { ...task, title: response.data.title } : task,
-          ),
-        );
-      } catch (error) {
-        const errorMessage =
-          error.response?.data?.errors?.[0]?.msg || "Произошла ошибка";
-        setError(errorMessage);
-      } finally {
-        setLoadingChangeTask(false);
-      }
-      return true;
-    },
-    [validateText],
-  );
-
-  //удаление задачи 
-  const deleteTask = useCallback(async (id) => {
-    setLoadingDeleteTask(true);
-    try {
-      const response = await api.delete(`/todos/${id}`);
-      // console.log('delete response: ', response);
-      setTasks((prev) => prev.filter((task) => task.id !== response.data?.id));
-    } catch (error) {
-      const errorMessage =  error.response?.data?.message || error.message || "Ошибка удаления";
-      setError(errorMessage);
-    } finally {
-      setLoadingDeleteTask(false);
-    }
-  }, []);
-
-  //переключатель выполнено или нет 
-  const isDoneToggler = useCallback(async (id) => {
-    setLoading(true);
-    try {
-      const response = await api.patch(`/todos/${id}/isCompleted`);
-      setTasks((prev) =>
-        prev.map((task) =>
-          task.id === response.data[0].id
-            ? { ...task, isCompleted: response.data[0].isCompleted }
-            : task,
-        ),
-      );
-    } catch (error) {
-      const errorMessage =  error.response?.data?.message || error.message || "Ошибка переключения";
-      setError(errorMessage);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  //очистка выполненных (в конце)
-  const clearCompeted = useCallback(async () => {
-    const completedTask = tasks.filter((item) => item.isCompleted);
-    if (completedTask.length === 0) return;
-    setLoading(true);
-    try {
-      const deletePromise = completedTask.map((taks) => {
-        api.delete(`/todos/${taks.id}`);
+    (title, onError) => {
+      addMutation.mutate(title, {
+        onError: (error) => {
+          const errorMessage =
+            error.response?.data?.errors?.[0]?.msg || "Произошла ошибка";
+          onError?.(errorMessage);
+        },
       });
-      await Promise.all(deletePromise);
-      setTasks((prev) => prev.filter((task) => !task.isCompleted));
-    } catch (error) {
-      const errorMessage =  error.response?.data?.message || error.message || "Ошибка переключения";
-      setError(errorMessage);
-    } finally {
-      setLoading(false);
-    }
-  }, [tasks]);
+    },
+    [addMutation],
+  );
+
+  //---API изменение задачи
+  const updateTitleMutation = useMutation({
+    mutationFn: editTodoTask,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: todoKeys.list() });
+    },
+  });
+  const editTitle = useCallback(
+    (id, newTitle, onError) => {
+      if (!newTitle || !newTitle.trim()) {
+        onError?.("Задача не может быть пустой!");
+        return;
+      }
+      updateTitleMutation.mutate(
+        { id, newTitle },
+        {
+          onError: (error) => {
+            const errorMessage =
+              error.response?.data?.errors?.[0]?.msg || "Произошла ошибка";
+            onError?.(errorMessage);
+          },
+        },
+      );
+    },
+    [updateTitleMutation],
+  );
+
+  //---API удаление таски
+  const deleteTitleMutation = useMutation({
+    mutationFn: deleteTodoTask,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: todoKeys.list() });
+    },
+  });
+  const deleteTask = useCallback(
+    (id, onError) => {
+      deleteTitleMutation.mutate(id, {
+        onError: (error) => {
+          const errorMessage =
+            error.response?.data?.message || "Ошибка удаления";
+          onError?.(errorMessage);
+        },
+      });
+    },
+    [deleteTitleMutation],
+  );
+
+  //---API переключатель выполнено или нет
+  const isDoneTogglerMutation = useMutation({
+    mutationFn: toggleTodoTask,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: todoKeys.list() });
+    },
+  });
+  const isDoneToggler = useCallback(
+    (id) => {
+      isDoneTogglerMutation.mutate(id);
+    },
+    [isDoneTogglerMutation],
+  );
+
+  //---API очистка выполненных (в конце)
+  const clearCompeted = useCallback(
+    (onError) => {
+      const completedTask = tasks.filter((item) => item.isCompleted);
+      if (completedTask.length === 0) return;
+      const deletedPromise = completedTask.map((task) => {
+        deleteTodoTask(task.id);
+      });
+      Promise.all(deletedPromise)
+        .then(() => {
+          queryClient.invalidateQueries({ queryKey: todoKeys.list() });
+        })
+        .catch((error) => {
+          const errorMessage =
+            error.response?.data?.errors?.[0]?.msg || "Произошла ошибка";
+          onError?.(errorMessage);
+        });
+    },
+    [tasks, queryClient],
+  );
 
   const value = useMemo(
     () => ({
@@ -188,10 +171,12 @@ export const ToDoProvider = ({ children }) => {
       activeCount,
       clearCompeted,
       loading,
-      loadingAddTask,
-      loadingChangeTask,
-      loadingDeleteTask,
+      loadingAddTask: addMutation.isPending, //флаг загрузки новой таски
+      loadingChangeTask: updateTitleMutation.isPending, //флаг загрузки изменения таски
+      // loadingDeleteTask, //флаг загрузки удаления таски
       error,
+      isLoading,
+      isError,
     }),
     [
       tasks,
@@ -205,10 +190,12 @@ export const ToDoProvider = ({ children }) => {
       activeCount,
       clearCompeted,
       loading,
-      loadingAddTask,
-      loadingChangeTask,
-      loadingDeleteTask,
+      addMutation.isPending,
+      updateTitleMutation.isPending,
+      // loadingDeleteTask,
       error,
+      isLoading,
+      isError,
     ],
   );
 
