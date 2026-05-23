@@ -13,13 +13,7 @@ import {
 export const ToDoProvider = ({ children }) => {
   const [tasks, setTasks] = useState([]);
   const [filter, setFilter] = useState("all");
-  const [loading, setLoading] = useState(false); //флаг загрузки
-  // const [loadingAddTask, setLoadingAddTask] = useState(false); //флаг загрузки новая таска
-  // const [loadingChangeTask, setLoadingChangeTask] = useState(false);
-  // const [loadingDeleteTask, setLoadingDeleteTask] = useState(false);
-  const queryClient = useQueryClient(); //--------------------квери
-  // const [success, setSuccess] = useState(""); //успех загрузки
-  // const [error, setError] = useState(""); //ошибка при загрузке
+  const queryClient = useQueryClient();
   console.log(tasks);
 
   //кол-во активных
@@ -51,10 +45,14 @@ export const ToDoProvider = ({ children }) => {
   } = useQuery({
     queryKey: todoKeys.list(),
     queryFn: fetchTask,
+    staleTime: 5000,
   });
   useEffect(() => {
-    setTasks(receivedTasks);
-  }, [receivedTasks]);
+    // защита от лишних обновлений
+    if (JSON.stringify(receivedTasks) !== JSON.stringify(tasks)) {
+      setTasks(receivedTasks);
+    }
+  }, [receivedTasks, tasks]);
 
   //---API добавление задачи
   const addMutation = useMutation({
@@ -170,10 +168,9 @@ export const ToDoProvider = ({ children }) => {
       setFilter,
       activeCount,
       clearCompeted,
-      loading,
-      loadingAddTask: addMutation.isPending, //флаг загрузки новой таски
-      loadingChangeTask: updateTitleMutation.isPending, //флаг загрузки изменения таски
-      // loadingDeleteTask, //флаг загрузки удаления таски
+      loadingAddTask: addMutation.isPending,
+      loadingChangeTask: updateTitleMutation.isPending,
+      loadingDeleteTask: deleteTitleMutation.isPending,
       error,
       isLoading,
       isError,
@@ -189,10 +186,9 @@ export const ToDoProvider = ({ children }) => {
       setFilter,
       activeCount,
       clearCompeted,
-      loading,
       addMutation.isPending,
       updateTitleMutation.isPending,
-      // loadingDeleteTask,
+      deleteTitleMutation.isPending,
       error,
       isLoading,
       isError,

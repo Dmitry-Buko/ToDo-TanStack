@@ -9,7 +9,6 @@ const Task = ({ task }) => {
     deleteTask,
     isDoneToggler,
     editTitle,
-    loading,
     loadingDeleteTask,
     loadingChangeTask,
   } = useTodo();
@@ -77,7 +76,7 @@ const Task = ({ task }) => {
       <div className="task__actions">
         <button
           onClick={toggleEdit}
-          disabled={loading}
+          disabled={loadingChangeTask}
           className="task__btn--edit"
         >
           {isEdit
@@ -88,7 +87,7 @@ const Task = ({ task }) => {
         </button>
         <button
           onClick={() => deleteTask(task.id, (err) => setError(err))}
-          disabled={loading}
+          disabled={loadingDeleteTask}
           className="task__btn--delete"
         >
           {loadingDeleteTask ? "Удаление.." : "Удалить 🗑"}
