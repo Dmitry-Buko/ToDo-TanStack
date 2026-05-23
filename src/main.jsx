@@ -8,7 +8,7 @@ import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 const queryClient = new QueryClient();
 
 createRoot(document.getElementById("root")).render(
-  <BrowserRouter basename="/ToDo-List-API">
+  <BrowserRouter basename="/ToDo-TanStack">
     <QueryClientProvider client={queryClient}>
       <ToDoProvider>
         <App />
