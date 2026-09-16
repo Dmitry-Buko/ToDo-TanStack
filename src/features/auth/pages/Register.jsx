@@ -25,40 +25,46 @@ const Register = () => {
     setError("");
     setLoading(true);
     setSuccess("");
-    
-    try {
-      const response = await axios.post(
-        "https://todo-redev.herokuapp.com/api/users/register",
-        formData,
-        {
-          headers: {
-            Accept: "application/json",
-            "Content-Type": "application/json",
-          },
-        },
-      );
-      setTimeout(() => {
-        navigate("/login", {
-          state: {
-            email: formData.email,
-            password: formData.password,
-          },
-        });
-      }, 2000);
 
-      setSuccess("Аккаунт создан. Заходим!");
-      setFormData({
-        username: "",
-        email: "",
-        password: "",
-        gender: "",
-        age: "",
-      });
+    const url = "https://todo-redev.onrender.com/api/auth/register";
+    const config = {
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+      },
+    };
+
+    try {
+      const response = await axios.post(url, formData, config);
+      const token = response.data?.access_token;
+      if (token) {
+        localStorage.setItem("token", token);
+        setSuccess("Аккаунт создан. Заходим!");
+        const savedEmail = formData.email;
+        const savedPassword = formData.password;
+        setFormData({
+          username: "",
+          email: "",
+          password: "",
+          gender: "",
+          age: "",
+        });
+        setTimeout(() => {
+          navigate("/login", {
+            state: {
+              email: savedEmail,
+              password: savedPassword,
+            },
+          });
+        }, 2000);
+      }
     } catch (error) {
       const errorMessage =
         error?.response?.data?.errors?.[0]?.msg ||
-        error?.response?.data?.message;
-      if (errorMessage) setError(errorMessage);
+        error?.response?.data?.message ||
+        "Произошла ошибка при регистрации";
+
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -73,7 +79,7 @@ const Register = () => {
         {success && <div className="success-message">{success}</div>}
 
         <form onSubmit={handleSubmit} className="login__form">
-            {/*Логин */}
+          {/*Логин */}
           <div className="form-group">
             <label>Логин</label>
             <InputLogin
@@ -86,7 +92,7 @@ const Register = () => {
             />
           </div>
 
-            {/*E-mail */}
+          {/*E-mail */}
           <div className="form-group">
             <label>E-mail</label>
             <InputLogin
@@ -99,7 +105,7 @@ const Register = () => {
             />
           </div>
 
-            {/*Пароль */}
+          {/*Пароль */}
           <div className="form-group">
             <label>Пароль</label>
             <InputLogin
@@ -112,7 +118,7 @@ const Register = () => {
             />
           </div>
 
-            {/*Gender */}
+          {/*Gender */}
           <div className="form-group">
             <label>Пол</label>
             <InputLogin
@@ -125,7 +131,7 @@ const Register = () => {
             />
           </div>
 
-            {/*Возраст */}
+          {/*Возраст */}
           <div className="form-group">
             <label>Возраст</label>
             <InputLogin
@@ -138,13 +144,20 @@ const Register = () => {
             />
           </div>
 
-          <button type="submit" disabled={loading} className="form-group__btn-enter">
+          <button
+            type="submit"
+            disabled={loading}
+            className="form-group__btn-enter"
+          >
             {loading ? "Регистрация..." : "Зарегистрироваться"}
           </button>
         </form>
 
         <p className="switch-link">
-          Уже есть аккаунт? <Link to="/login" className="switch-link__login">Войти</Link>
+          Уже есть аккаунт?{" "}
+          <Link to="/login" className="switch-link__login">
+            Войти
+          </Link>
         </p>
       </div>
     </div>

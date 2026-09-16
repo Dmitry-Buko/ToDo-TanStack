@@ -1,6 +1,6 @@
 const TaskText = ({task}) => {
   return (
-    <p className={`task__text ${task.isCompleted ? "done" : ""}`}>
+    <p className={`task__text ${task.completed ? "done" : ""}`}>
       {task.title}
     </p>
   );

@@ -1,3 +1,4 @@
+import { EditTodoDto, Task, TasksResponse } from "../../types/types";
 import api from "./todoApi";
 
 //генератор ключей
@@ -8,18 +9,18 @@ export const todoKeys = {
 
 //API начальная Загрузка тасок
 export const fetchTask = async () => {
-  const response = await api.get("/todos");
-  return response.data;
+  const response = await api.get<TasksResponse>("/todos");
+  return response.data.data;
 };
 
 //API добавление задачи
-export const createTask = async (title) => {
+export const createTask = async (title: string): Promise<Task> => {
   const response = await api.post("/todos", { title });
   return response.data;
 };
 
 //API изменение задачи
-export const editTodoTask = async ({ id, newTitle }) => {
+export const editTodoTask = async ({ id, newTitle }: EditTodoDto) => {
   const response = await api.patch(`/todos/${id}`, {
     title: newTitle,
   });
@@ -27,13 +28,13 @@ export const editTodoTask = async ({ id, newTitle }) => {
 };
 
 //---API удаление таски
-export const deleteTodoTask = async (id) => {
+export const deleteTodoTask = async (id: number) => {
   const response = await api.delete(`/todos/${id}`);
   return response.data;
 };
 
 //---API переключатель выполнено или нет
-export const toggleTodoTask = async (id) => {
-  const response = await api.patch(`/todos/${id}/isCompleted`);
+export const toggleTodoTask = async (id: number) => {
+  const response = await api.patch(`/todos/${id}/toggle`);
   return response.data;
 };

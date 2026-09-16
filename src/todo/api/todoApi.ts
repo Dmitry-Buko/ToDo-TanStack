@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const api = axios.create({
-  baseURL: "https://todo-redev.herokuapp.com/api",
+  baseURL: "https://todo-redev.onrender.com/api",
   headers: {
     Accept: "application/json",
     "Content-Type": "application/json",

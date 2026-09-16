@@ -10,7 +10,7 @@ const ToDoList = () => {
 
   return (
     <div className="tasks-list">
-      {filteredTasks.map((item) => (
+      {filteredTasks?.map((item) => (
         <Task key={item.id} task={item} />
       ))}
     </div>

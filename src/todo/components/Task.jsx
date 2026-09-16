@@ -53,7 +53,7 @@ const Task = ({ task }) => {
       <input
         type="checkbox"
         className="task__checkbox"
-        checked={!!task.isCompleted}
+        checked={!!task.completed}
         onChange={() => isDoneToggler(task.id)}
       />
       {error && <ErrorBox error={error} />}

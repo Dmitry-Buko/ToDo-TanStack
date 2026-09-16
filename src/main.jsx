@@ -1,7 +1,7 @@
 import { BrowserRouter } from "react-router-dom";
 import { createRoot } from "react-dom/client";
 import "./styles/index.css";
-import App from "./app/App.jsx";
+import App from "./app/App";
 import { ToDoProvider } from "./todo/context/ToDoProvider.jsx";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools'

@@ -24,7 +24,7 @@ const Login = () => {
     setError("");
     setSuccess("");
 
-    const url = "https://todo-redev.herokuapp.com/api/auth/login";
+    const url = "https://todo-redev.onrender.com/api/auth/login";
     const config = {
       headers: {
         Accept: "application/json",
@@ -33,7 +33,9 @@ const Login = () => {
     };
     try {
       const response = await axios.post(url, formData, config);
-      const token = response.data?.token;
+      const token = response.data?.access_token;
+      console.log('token', token);
+      
       if (token) {
         localStorage.setItem("token", token);
         setSuccess("Вход успешно выполнен!");

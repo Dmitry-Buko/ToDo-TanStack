@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo, useEffect } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { ToDoContext } from "./ToDoContext";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
@@ -11,34 +11,11 @@ import {
 } from "../api/todoApiFunc";
 
 export const ToDoProvider = ({ children }) => {
-  const [tasks, setTasks] = useState([]);
   const [filter, setFilter] = useState("all");
   const queryClient = useQueryClient();
-  console.log(tasks);
 
-  //кол-во активных
-  const activeCount = useMemo(() => {
-    let count = 0;
-    tasks.forEach((el) => {
-      if (!el.isCompleted) count++;
-    });
-    return count;
-  }, [tasks]);
-  //фильтрация
-  const filteredTasks = useMemo(() => {
-    switch (filter) {
-      case "active":
-        return tasks.filter((item) => !item.isCompleted);
-      case "completed":
-        return tasks.filter((item) => item.isCompleted);
-      default:
-        return tasks;
-    }
-  }, [filter, tasks]);
-
-  //---API начальная Загрузка тасок
   const {
-    data: receivedTasks = [],
+    data: receivedData,
     isLoading,
     isError,
     error,
@@ -47,20 +24,39 @@ export const ToDoProvider = ({ children }) => {
     queryFn: fetchTask,
     staleTime: 5000,
   });
-  useEffect(() => {
-    // защита от лишних обновлений
-    if (JSON.stringify(receivedTasks) !== JSON.stringify(tasks)) {
-      setTasks(receivedTasks);
-    }
-  }, [receivedTasks, tasks]);
 
-  //---API добавление задачи
+  const tasks = useMemo(() => receivedData || [], [receivedData]);
+
+  console.log("tasks", receivedData);
+
+  // Считаем кол-во активных
+  const activeCount = useMemo(() => {
+    let count = 0;
+    tasks.forEach((el) => {
+      if (!el.completed) count++;
+    });
+    return count;
+  }, [tasks]);
+
+  const filteredTasks = useMemo(() => {
+    switch (filter) {
+      case "active":
+        return tasks.filter((item) => !item.completed);
+      case "completed":
+        return tasks.filter((item) => item.completed);
+      default:
+        return tasks;
+    }
+  }, [filter, tasks]);
+
+  // --- API добавление задачи ---
   const addMutation = useMutation({
     mutationFn: createTask,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: todoKeys.list() });
     },
   });
+
   const addTask = useCallback(
     (title, onError) => {
       addMutation.mutate(title, {
@@ -74,13 +70,14 @@ export const ToDoProvider = ({ children }) => {
     [addMutation],
   );
 
-  //---API изменение задачи
+  // --- API изменение задачи ---
   const updateTitleMutation = useMutation({
     mutationFn: editTodoTask,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: todoKeys.list() });
     },
   });
+
   const editTitle = useCallback(
     (id, newTitle, onError) => {
       if (!newTitle || !newTitle.trim()) {
@@ -101,13 +98,14 @@ export const ToDoProvider = ({ children }) => {
     [updateTitleMutation],
   );
 
-  //---API удаление таски
+  // --- API удаление таски ---
   const deleteTitleMutation = useMutation({
     mutationFn: deleteTodoTask,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: todoKeys.list() });
     },
   });
+
   const deleteTask = useCallback(
     (id, onError) => {
       deleteTitleMutation.mutate(id, {
@@ -121,13 +119,14 @@ export const ToDoProvider = ({ children }) => {
     [deleteTitleMutation],
   );
 
-  //---API переключатель выполнено или нет
+  // --- API переключатель выполнено или нет ---
   const isDoneTogglerMutation = useMutation({
     mutationFn: toggleTodoTask,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: todoKeys.list() });
     },
   });
+
   const isDoneToggler = useCallback(
     (id) => {
       isDoneTogglerMutation.mutate(id);
@@ -135,14 +134,16 @@ export const ToDoProvider = ({ children }) => {
     [isDoneTogglerMutation],
   );
 
-  //---API очистка выполненных (в конце)
+  // --- API очистка выполненных ---
   const clearCompeted = useCallback(
     (onError) => {
-      const completedTask = tasks.filter((item) => item.isCompleted);
+      const completedTask = tasks.filter((item) => item.completed);
       if (completedTask.length === 0) return;
-      const deletedPromise = completedTask.map((task) => {
-        deleteTodoTask(task.id);
-      });
+
+      const deletedPromise = completedTask.map((task) =>
+        deleteTodoTask(task.id),
+      );
+
       Promise.all(deletedPromise)
         .then(() => {
           queryClient.invalidateQueries({ queryKey: todoKeys.list() });
