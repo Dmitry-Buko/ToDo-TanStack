@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, ReactNode } from "react";
 import { ToDoContext } from "./ToDoContext";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
@@ -9,9 +9,17 @@ import {
   deleteTodoTask,
   toggleTodoTask,
 } from "../api/todoApiFunc";
+import {
+  CreateTaskErrorResponse,
+  EditTodoDto,
+  ErrorHandler,
+  FilterType,
+  Task,
+} from "../../types/types";
+import { AxiosError } from "axios";
 
-export const ToDoProvider = ({ children }) => {
-  const [filter, setFilter] = useState("all");
+export const ToDoProvider = ({ children }: { children: ReactNode }) => {
+  const [filter, setFilter] = useState<FilterType>("all");
   const queryClient = useQueryClient();
 
   const {
@@ -50,7 +58,11 @@ export const ToDoProvider = ({ children }) => {
   }, [filter, tasks]);
 
   // --- API добавление задачи ---
-  const addMutation = useMutation({
+  const addMutation = useMutation<
+    Task, //что возвращает мутация
+    AxiosError<CreateTaskErrorResponse>, //тип ошибки, тк юзаем axios, (а у него своя структура ответа), используем AxiosError
+    string // тип данных, который передается в mutate()
+  >({
     mutationFn: createTask,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: todoKeys.list() });
@@ -58,7 +70,7 @@ export const ToDoProvider = ({ children }) => {
   });
 
   const addTask = useCallback(
-    (title, onError) => {
+    (title: string, onError?: ErrorHandler) => {
       addMutation.mutate(title, {
         onError: (error) => {
           const errorMessage =
@@ -71,7 +83,11 @@ export const ToDoProvider = ({ children }) => {
   );
 
   // --- API изменение задачи ---
-  const updateTitleMutation = useMutation({
+  const updateTitleMutation = useMutation<
+    Task,
+    AxiosError<CreateTaskErrorResponse>,
+    EditTodoDto //тип входных данных в mutate()
+  >({
     mutationFn: editTodoTask,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: todoKeys.list() });
@@ -79,7 +95,7 @@ export const ToDoProvider = ({ children }) => {
   });
 
   const editTitle = useCallback(
-    (id, newTitle, onError) => {
+    (id: number, newTitle: string, onError?: ErrorHandler) => {
       if (!newTitle || !newTitle.trim()) {
         onError?.("Задача не может быть пустой!");
         return;
@@ -99,7 +115,11 @@ export const ToDoProvider = ({ children }) => {
   );
 
   // --- API удаление таски ---
-  const deleteTitleMutation = useMutation({
+  const deleteTitleMutation = useMutation<
+    void,//deleteTodoTask ничего не возвращает, соответственно mutation так же ничего не возвращает
+    AxiosError<CreateTaskErrorResponse>,
+    number
+  >({
     mutationFn: deleteTodoTask,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: todoKeys.list() });
@@ -107,11 +127,11 @@ export const ToDoProvider = ({ children }) => {
   });
 
   const deleteTask = useCallback(
-    (id, onError) => {
+    (id: number, onError?: ErrorHandler) => {
       deleteTitleMutation.mutate(id, {
         onError: (error) => {
           const errorMessage =
-            error.response?.data?.message || "Ошибка удаления";
+            error.response?.data?.errors?.[0]?.msg || "Ошибка удаления";
           onError?.(errorMessage);
         },
       });
@@ -128,7 +148,7 @@ export const ToDoProvider = ({ children }) => {
   });
 
   const isDoneToggler = useCallback(
-    (id) => {
+    (id: number) => {
       isDoneTogglerMutation.mutate(id);
     },
     [isDoneTogglerMutation],
@@ -136,7 +156,7 @@ export const ToDoProvider = ({ children }) => {
 
   // --- API очистка выполненных ---
   const clearCompeted = useCallback(
-    (onError) => {
+    (onError?: ErrorHandler) => {
       const completedTask = tasks.filter((item) => item.completed);
       if (completedTask.length === 0) return;
 

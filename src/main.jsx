@@ -2,7 +2,7 @@ import { BrowserRouter } from "react-router-dom";
 import { createRoot } from "react-dom/client";
 import "./styles/index.css";
 import App from "./app/App";
-import { ToDoProvider } from "./todo/context/ToDoProvider.jsx";
+import { ToDoProvider } from "./todo/context/ToDoProvider.tsx";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 const queryClient = new QueryClient();

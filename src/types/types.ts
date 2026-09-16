@@ -1,4 +1,6 @@
-export type Filter = "all" | "active" | "completed";
+import { Dispatch, SetStateAction } from "react";
+
+export type FilterType = "all" | "active" | "completed";
 
 export interface Todo {
   id: number;
@@ -30,6 +32,42 @@ export type EditTodoDto = {
 };
 
 export interface ErrorResponse {
-  message?: string;
-  statusCode?: number;
+  response?: {
+    data?: {
+      message?: string;
+      statusCode?: number;
+    };
+  };
 }
+
+export type ErrorHandler = (message: string) => void;
+
+export interface IToDoContext {
+  tasks: Task[];
+  addTask: (title: string, onError?: (errorMessage: string) => void) => void;
+  deleteTask: (id: number, onError?: (errorMessage: string) => void) => void;
+  isDoneToggler: (id: number) => void;
+  editTitle: (
+    id: number,
+    newTitle: string,
+    onError?: (errorMessage: string) => void,
+  ) => void;
+  filteredTasks: Task[];
+  filter: FilterType;
+  setFilter: Dispatch<SetStateAction<string>>;
+  activeCount: number;
+  clearCompeted: (onError?: (errorMessage: string) => void) => void;
+  loadingAddTask: boolean;
+  loadingChangeTask: boolean;
+  loadingDeleteTask: boolean;
+  error: Error | null;
+  isLoading: boolean;
+  isError: boolean;
+}
+
+
+export type CreateTaskErrorResponse = {
+  errors?: {
+    msg: string;
+  }[];
+};
