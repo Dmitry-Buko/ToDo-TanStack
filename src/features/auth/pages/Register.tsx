@@ -1,7 +1,8 @@
-import axios from "axios";
-import { useState } from "react";
+import axios, { AxiosError } from "axios";
+import { ChangeEvent, SubmitEvent, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import InputLogin from "../components/InputLogin";
+import { CreateTaskErrorResponse } from "../../../types/types";
 
 const Register = () => {
   const [formData, setFormData] = useState({
@@ -16,11 +17,11 @@ const Register = () => {
   const [success, setSuccess] = useState("");
   const navigate = useNavigate();
 
-  const handleChange = (e) => {
+  const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: SubmitEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError("");
     setLoading(true);
@@ -59,9 +60,12 @@ const Register = () => {
         }, 2000);
       }
     } catch (error) {
+      const err = error as AxiosError<
+        CreateTaskErrorResponse & { message: string }
+      >;
       const errorMessage =
-        error?.response?.data?.errors?.[0]?.msg ||
-        error?.response?.data?.message ||
+        err?.response?.data?.errors?.[0]?.msg ||
+        err?.response?.data?.message ||
         "Произошла ошибка при регистрации";
 
       setError(errorMessage);

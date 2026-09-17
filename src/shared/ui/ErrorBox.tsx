@@ -1,4 +1,4 @@
-const ErrorBox = ({ error }) => {
+const ErrorBox = ({ error }: { error: string }) => {
   return (
     <div className="error-box">
       <span className="error-icon">⚠️</span>

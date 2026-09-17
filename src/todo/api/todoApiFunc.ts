@@ -3,15 +3,14 @@ import api from "./todoApi";
 
 //генератор ключей
 export const todoKeys = {
-  all: ["todo"],
+  all: ["todo"] as const,
   list: () => [...todoKeys.all, "list"],
 };
 
 //API начальная Загрузка тасок
 export const fetchTask = async (): Promise<Task[]> => {
-  const response = await api.get<TasksResponse>("/todos");
-  console.log("fetchTask:", response);
-  return response.data.data;
+  const { data } = await api.get<TasksResponse>("/todos");
+  return data.data;
 };
 
 //API добавление задачи

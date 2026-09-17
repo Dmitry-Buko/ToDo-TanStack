@@ -3,7 +3,7 @@ import ErrorBox from "../../shared/ui/ErrorBox";
 import { useTodo } from "../context/ToDoContext";
 
 const FilteredTasks = () => {
-  const [error, setError] = useState("");
+  const [error, setError] = useState<string>("");
   const { filter, setFilter, activeCount, clearCompeted } = useTodo();
 
   return (

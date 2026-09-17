@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { SubmitEvent, useCallback, useState } from "react";
 import { useTodo } from "../context/ToDoContext";
 import ErrorBox from "../../shared/ui/ErrorBox";
 
@@ -8,7 +8,7 @@ const InputTask = () => {
   const [error, setError] = useState("");
 
   const handleSubmit = useCallback(
-    async (e) => {
+    async (e: SubmitEvent<HTMLFormElement>) => {
       e.preventDefault();
       if (!text.trim()) {
         setError("Задача не может быть пустой!");

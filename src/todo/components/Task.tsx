@@ -1,10 +1,11 @@
-import { useCallback, useState } from "react";
+import { KeyboardEvent, useCallback, useState } from "react";
 import { useTodo } from "../context/ToDoContext";
 import ErrorBox from "../../shared/ui/ErrorBox";
 import TaskText from "./TaskText";
 import TaskEditForm from "./TaskEditForm";
+import type { Task } from "../../types/types";
 
-const Task = ({ task }) => {
+const Task = ({ task }:{task: Task}) => {
   const {
     deleteTask,
     isDoneToggler,
@@ -13,12 +14,12 @@ const Task = ({ task }) => {
     loadingChangeTask,
   } = useTodo();
 
-  const [isEdit, setIsEdit] = useState(false);
-  const [editText, setEditText] = useState(task.title || "");
-  const [error, setError] = useState("");
+  const [isEdit, setIsEdit] = useState<boolean>(false);
+  const [editText, setEditText] = useState<string>(task.title || "");
+  const [error, setError] = useState<string>("");
 
   const validateAndSave = useCallback(
-    async (text) => {
+    async (text: string) => {
       editTitle(task.id, text, (errorMessage) => {
         setError(errorMessage);
       });
@@ -29,7 +30,7 @@ const Task = ({ task }) => {
     [editTitle, task.id],
   );
 
-  const handleKeyDown = async (e) => {
+  const handleKeyDown = async (e: KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter") {
       validateAndSave(editText);
     } else if (e.key === "Escape") {

@@ -35,8 +35,6 @@ export const ToDoProvider = ({ children }: { children: ReactNode }) => {
 
   const tasks = useMemo(() => receivedData || [], [receivedData]);
 
-  console.log("tasks", receivedData);
-
   // Считаем кол-во активных
   const activeCount = useMemo(() => {
     let count = 0;

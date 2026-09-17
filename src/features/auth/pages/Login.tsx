@@ -1,24 +1,32 @@
-import axios from "axios";
-import { useState } from "react";
+import axios, { AxiosError } from "axios";
+import { ChangeEvent, SubmitEvent, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import InputLogin from "../components/InputLogin";
+import {
+  CreateTaskErrorResponse,
+  FormDataType,
+  LocationState,
+  LoginResponse,
+} from "../../../types/types";
 
 const Login = () => {
   const location = useLocation();
-  const [formData, setFormData] = useState({
-    email: location.state?.email || "",
-    password: location.state?.password || "",
+  const state = location.state as LocationState | null;
+  const [formData, setFormData] = useState<FormDataType>({
+    email: state?.email || "",
+    password: state?.password || "",
   });
-  const [error, setError] = useState(""); 
-  const [loading, setLoading] = useState(false); 
-  const [success, setSuccess] = useState("");
+  const [error, setError] = useState<string>("");
+  const [loading, setLoading] = useState<boolean>(false);
+  const [success, setSuccess] = useState<string>("");
   const navigate = useNavigate();
 
-  const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+  const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const name = e.target.name as keyof FormDataType;
+    setFormData({ ...formData, [name]: e.target.value });
   };
-
-  const handleSubmit = async (e) => {
+  //SubmitEvent because FormEvent - deprecated
+  const handleSubmit = async (e: SubmitEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLoading(true);
     setError("");
@@ -32,10 +40,8 @@ const Login = () => {
       },
     };
     try {
-      const response = await axios.post(url, formData, config);
+      const response = await axios.post<LoginResponse>(url, formData, config);
       const token = response.data?.access_token;
-      console.log('token', token);
-      
       if (token) {
         localStorage.setItem("token", token);
         setSuccess("Вход успешно выполнен!");
@@ -43,16 +49,18 @@ const Login = () => {
           email: "",
           password: "",
         });
-        setTimeout(()=>{
-          navigate('/todo')
-        },1500)
+        setTimeout(() => {
+          navigate("/todo");
+        }, 1500);
       } else {
         setError("Токен не получен!");
       }
     } catch (error) {
+      const err = error as AxiosError<
+        CreateTaskErrorResponse & { message?: string }
+      >;
       const errorMessage =
-        error?.response?.data?.errors?.[0]?.msg ||
-        error?.response?.data?.message;
+        err?.response?.data?.errors?.[0]?.msg || err?.response?.data?.message;
       if (errorMessage) setError(errorMessage);
     } finally {
       setLoading(false);
@@ -92,14 +100,20 @@ const Login = () => {
             />
           </div>
 
-          <button type="submit" disabled={loading} className="form-group__btn-enter">
+          <button
+            type="submit"
+            disabled={loading}
+            className="form-group__btn-enter"
+          >
             {loading ? "Вход..." : "Войти"}
           </button>
         </form>
 
         <p className="switch-link">
           Нет аккаунта?
-          <Link to="/register" className="switch-link__login">Зарегистрироваться</Link>
+          <Link to="/register" className="switch-link__login">
+            Зарегистрироваться
+          </Link>
         </p>
       </div>
     </div>

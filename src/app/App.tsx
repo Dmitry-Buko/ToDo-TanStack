@@ -1,10 +1,10 @@
-import Header from "../todo/components/Header";
-import { Routes, Route, Navigate } from "react-router-dom";
-import Login from "../features/auth/pages/Login";
-const Register = lazy(() => import("../features/auth/pages/Register"));
-import PrivateRoute from "../features/auth/components/PrivateRoute";
-import ToDo from "../todo/components/ToDo";
 import { lazy, Suspense } from "react";
+import { Routes, Route, Navigate } from "react-router-dom";
+import Header from "../todo/components/Header";
+import Login from "../features/auth/pages/Login";
+import PrivateRoute from "../features/auth/components/PrivateRoute";
+const ToDo = lazy(() => import("../todo/components/ToDo"));
+const Register = lazy(() => import("../features/auth/pages/Register"));
 
 function App() {
   return (
@@ -12,7 +12,7 @@ function App() {
       <Header />
       <Routes>
         <Route path="/" element={<Navigate to="/login" replace />} />
-        <Route index path="/login" element={<Login />} />
+        <Route path="/login" element={<Login />} />
         <Route
           path="/register"
           element={

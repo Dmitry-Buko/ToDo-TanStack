@@ -19,5 +19,5 @@
     "allowJs": true,
     "checkJs": false
   },
-  "include": ["src"]
+  "include": ["src", "vite-env.d.ts"]
 }

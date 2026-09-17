@@ -5,7 +5,7 @@ const ToDoList = () => {
   const { filteredTasks, error, isLoading, isError } = useTodo();
   
   if (isLoading) return <h1 className="nothing">Загрузка...</h1>;
-  if (isError) return <h1 className="nothing">{error}</h1>;
+  if (isError) return <h1 className="nothing">{error?.message || "Произошла ошибка"}</h1>;
   if (filteredTasks.length === 0) return <h1 className="nothing">Пусто 🤷🏼‍♂️</h1>;
 
   return (
